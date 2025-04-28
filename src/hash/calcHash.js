@@ -1,25 +1,20 @@
 import { createHash } from "node:crypto";
-import { readFile } from "node:fs/promises";
+import { createReadStream } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const calculateHash = async () => {
   // Write your code here
-  const hash = createHash("sha256");
-
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = dirname(__filename);
 
   const filepath = join(__dirname, "files", "fileToCalculateHashFor.txt");
 
-  try {
-    const data = await readFile(filepath, { encoding: "utf8" });
-    hash.update(data);
+  const hash = createHash("sha256");
+  const stream = createReadStream(filepath);
 
-    console.log(hash.digest("hex"));
-  } catch (e) {
-    throw new Error("FS operation failed");
-  }
+  stream.on("data", (chunk) => hash.update(chunk));
+  stream.on("end", () => console.log(hash.digest("hex")));
 };
 
 await calculateHash();
